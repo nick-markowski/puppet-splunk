@@ -3,6 +3,7 @@
 #   platform specific installation steps on Linux or Unix type systems.
 #
 class splunk::enterprise::install::nix inherits splunk::enterprise::install {
+  assert_private()
 
   if $facts['kernel'] == 'SunOS' {
     $_responsefile = "${splunk::enterprise::staging_dir}/response.txt"
@@ -25,7 +26,7 @@ class splunk::enterprise::install::nix inherits splunk::enterprise::install {
     }
 
     # Collect any Splunk packages and give them an admin and response file.
-    Package[$splunk::enterprise::enterprise_package_name] {
+    Package[$splunk::enterprise::package_name] {
       adminfile    => $_adminfile,
       responsefile => $_responsefile,
     }
@@ -35,7 +36,7 @@ class splunk::enterprise::install::nix inherits splunk::enterprise::install {
   if versioncmp($splunk::enterprise::version, '7.2.4.2') >= 0 {
     ensure_packages(['net-tools'], {
       'ensure' => 'present',
-      before   => Package[$splunk::enterprise::enterprise_package_name]
+      before   => Package[$splunk::enterprise::package_name]
     })
   }
 

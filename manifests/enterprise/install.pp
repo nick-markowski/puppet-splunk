@@ -3,14 +3,15 @@
 #   through additional platform specific sub-class, the required steps
 #   for successfully installing Splunk Enterprise
 #
-class splunk::enterprise::install {
+class splunk::enterprise::install inherits splunk::enterprise {
+  assert_private()
 
   if $facts['kernel'] == 'Linux' or $facts['kernel'] == 'SunOS' {
     include splunk::enterprise::install::nix
   }
 
   $_package_source = $splunk::enterprise::manage_package_source ? {
-    true  => $splunk::enterprise::enterprise_package_src,
+    true  => $splunk::enterprise::package_src,
     false => $splunk::enterprise::package_source
   }
 

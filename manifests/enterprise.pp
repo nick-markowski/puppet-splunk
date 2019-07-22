@@ -5,18 +5,12 @@
 #   include splunk::enterprise
 #
 # @example Install specific version and build with admin passord management
-#    class { 'splunk::params':
-#      version => '7.2.5',
-#      build   => '088f49762779',
+#    class { 'splunk::enterprise::params':
+#      package_ensure => '7.2.5-088f49762779',
 #    }
 #    class { 'splunk::enterprise':
-#      package_ensure => latest,
 #      manage_password => true,
 #    }
-#
-# @param version
-#   Specifies the version of Splunk Enterprise the module should install and
-#   manage.
 #
 # @param package_name
 #   The name of the package(s) Puppet will use to install Splunk.
@@ -30,9 +24,9 @@
 # @param path_delimiter
 #   The path separator used in the archived path of the Splunk package.
 #
-# @param enterprise_package_src
+# @param package_src
 #   The source URL for the splunk installation media (typically an RPM, MSI,
-#   etc). If a `$src_root` parameter is set in splunk::params, this will be
+#   etc). If a `$src_root` parameter is set in splunk::enterprise::params, this will be
 #   automatically supplied. Otherwise it is required. The URL can be of any
 #   protocol supported by the pupept/archive module. On Windows, this can be
 #   a UNC path to the MSI.
@@ -41,11 +35,11 @@
 #   The package management system used to host the Splunk packages.
 #
 # @param manage_package_source
-#   Whether or not to use the supplied `enterprise_package_src` param.
+#   Whether or not to use the supplied `package_src` param.
 #
 # @param package_source
 #   *Optional* The source URL for the splunk installation media (typically an RPM,
-#   MSI, etc). If `enterprise_package_src` parameter is set in splunk::params and
+#   MSI, etc). If `package_src` parameter is set in splunk::enterprise::params and
 #   `manage_package_source` is true, this will be automatically supplied. Otherwise
 #   it is required. The URL can be of any protocol supported by the puppet/archive
 #   module. On Windows, this can be a UNC path to the MSI.
@@ -56,10 +50,10 @@
 # @param splunk_user
 #   The user to run Splunk as.
 #
-# @param enterprise_homedir
+# @param homedir
 #   Specifies the Splunk Enterprise home directory.
 #
-# @param enterprise_confdir
+# @param confdir
 #   Specifies the Splunk Enterprise configuration directory.
 #
 # @param service_name
@@ -169,28 +163,27 @@
 #   The secret used to salt the splunk password.
 #
 class splunk::enterprise (
-  String[1] $version                         = $splunk::params::version,
-  String[1] $package_name                    = $splunk::params::enterprise_package_name,
-  String[1] $package_ensure                  = $splunk::params::enterprise_package_ensure,
-  String[1] $staging_dir                     = $splunk::params::staging_dir,
-  String[1] $path_delimiter                  = $splunk::params::path_delimiter,
-  String[1] $enterprise_package_src          = $splunk::params::enterprise_package_src,
-  Optional[String[1]] $package_provider      = $splunk::params::package_provider,
+  String[1] $package_name                    = $splunk::enterprise::params::package_name,
+  Splunk::Pkgensure $package_ensure          = $splunk::enterprise::params::package_ensure,
+  String[1] $staging_dir                     = $splunk::enterprise::params::staging_dir,
+  String[1] $path_delimiter                  = $splunk::enterprise::params::path_delimiter,
+  String[1] $package_src                     = $splunk::enterprise::params::package_src,
+  Optional[String[1]] $package_provider      = $splunk::enterprise::params::package_provider,
   Boolean $manage_package_source             = true,
   Optional[String[1]] $package_source        = undef,
-  Splunk::Entinstalloptions $install_options = $splunk::params::enterprise_install_options,
-  String[1] $splunk_user                     = $splunk::params::splunk_user,
-  Stdlib::Absolutepath $enterprise_homedir   = $splunk::params::enterprise_homedir,
-  Stdlib::Absolutepath $enterprise_confdir   = $splunk::params::enterprise_confdir,
-  String[1] $service_name                    = $splunk::params::enterprise_service,
-  Stdlib::Absolutepath $service_file         = $splunk::params::enterprise_service_file,
-  Boolean $boot_start                        = $splunk::params::boot_start,
+  Splunk::Entinstalloptions $install_options = $splunk::enterprise::params::install_options,
+  String[1] $splunk_user                     = $splunk::enterprise::params::splunk_user,
+  Stdlib::Absolutepath $homedir              = $splunk::enterprise::params::homedir,
+  Stdlib::Absolutepath $confdir              = $splunk::enterprise::params::confdir,
+  String[1] $service_name                    = $splunk::enterprise::params::service,
+  Stdlib::Absolutepath $service_file         = $splunk::enterprise::params::service_file,
+  Boolean $boot_start                        = $splunk::enterprise::params::boot_start,
   Boolean $use_default_config                = true,
   String[1] $input_default_host              = $facts['fqdn'],
   String[1] $input_connection_host           = 'dns',
   Stdlib::IP::Address $splunkd_listen        = '127.0.0.1',
-  Stdlib::Port $splunkd_port                 = $splunk::params::splunkd_port,
-  Stdlib::Port $logging_port                 = $splunk::params::logging_port,
+  Stdlib::Port $splunkd_port                 = $splunk::enterprise::params::splunkd_port,
+  Stdlib::Port $logging_port                 = $splunk::enterprise::params::logging_port,
   Stdlib::Port $web_httpport                 = 8000,
   Boolean $purge_alert_actions               = false,
   Boolean $purge_authentication              = false,
@@ -207,16 +200,32 @@ class splunk::enterprise (
   Boolean $purge_transforms                  = false,
   Boolean $purge_uiprefs                     = false,
   Boolean $purge_web                         = false,
-  Boolean $manage_password                   = $splunk::params::manage_password,
-  Boolean $seed_password                     = $splunk::params::seed_password,
-  Boolean $reset_seeded_password             = $splunk::params::reset_seeded_password,
-  Stdlib::Absolutepath $password_config_file = $splunk::params::enterprise_password_config_file,
-  Stdlib::Absolutepath $seed_config_file     = $splunk::params::enterprise_seed_config_file,
-  String[1] $password_content                = $splunk::params::password_content,
-  String[1] $password_hash                   = $splunk::params::password_hash,
-  Stdlib::Absolutepath $secret_file          = $splunk::params::enterprise_secret_file,
-  String[1] $secret                          = $splunk::params::secret,
-) inherits splunk {
+  Boolean $manage_password                   = $splunk::enterprise::params::manage_password,
+  Boolean $seed_password                     = $splunk::enterprise::params::seed_password,
+  Boolean $reset_seeded_password             = $splunk::enterprise::params::reset_seeded_password,
+  Stdlib::Absolutepath $password_config_file = $splunk::enterprise::params::password_config_file,
+  Stdlib::Absolutepath $seed_config_file     = $splunk::enterprise::params::seed_config_file,
+  String[1] $password_content                = $splunk::enterprise::params::password_content,
+  String[1] $password_hash                   = $splunk::enterprise::params::password_hash,
+  Stdlib::Absolutepath $secret_file          = $splunk::enterprise::params::secret_file,
+  String[1] $secret                          = $splunk::enterprise::params::secret,
+) inherits splunk::enterprise::params {
+
+  # Splunk version is specified
+  if $package_ensure =~ /^\d/ {
+    $version = split($package_ensure,'-')[0]
+    $release = split($package_ensure,'-')[1]
+  }
+  # Splunk version is not specified, and Splunk is not installed
+  elsif ($package_ensure !~ /^\d/) and (!has_key($facts['splunkenterprise'],'version')) {
+    fail('No splunk version detected, you need to specify `$splunk::enterprise::package_ensure` in the form `version-release`, eg. 7.2.4.2-fb30470262e3')
+  }
+  # Splunk version is not specified, and Splunk is installed
+  else {
+    $version = $facts['splunkenterprise']['version']
+    $release = $facts['splunkenterprise']['release']
+  }
+
 
   if (defined(Class['splunk::forwarder'])) {
     fail('Splunk Universal Forwarder provides a subset of Splunk Enterprise capabilities, and has potentially conflicting resources when included with Splunk Enterprise on the same node.  Do not include splunk::forwarder on the same node as splunk::enterprise.  Configure Splunk Enterprise to meet your forwarding needs.'

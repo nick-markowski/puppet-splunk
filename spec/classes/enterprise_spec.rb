@@ -2,8 +2,7 @@ require 'spec_helper'
 
 shared_examples_for 'splunk enterprise nix defaults' do
   it { is_expected.to compile.with_all_deps }
-  it { is_expected.to contain_class('splunk') }
-  it { is_expected.to contain_class('splunk::params') }
+  it { is_expected.to contain_class('splunk::enterprise::params') }
   it { is_expected.to contain_class('splunk::enterprise') }
   it { is_expected.to contain_class('splunk::enterprise::install') }
   it { is_expected.to contain_class('splunk::enterprise::install::nix') }
@@ -44,8 +43,17 @@ describe 'splunk::enterprise' do
       else
         context "on #{os}" do
           let(:facts) do
-            facts
+            facts.merge(splunkenterprise: {})
           end
+
+          context 'splunk when no package_ensure version is specified, and there is no previous installation' do
+            it { expect { is_expected.to contain_class('splunk::enterprise') }.to raise_error(Puppet::Error, %r{No splunk version detected, you need to specify `$splunk::enterprise::package_ensure` in the form `version-release`, eg. 7.2.4.2-fb30470262e3}) }
+          end
+
+          let(:facts) do
+            facts.merge(splunkenterprise: {'version' => '1.0.0', 'release' => 'abcdefghijkl'})
+          end
+
 
           context 'splunk when including forwarder and enterprise' do
             let(:pre_condition) do
@@ -76,12 +84,12 @@ describe 'splunk::enterprise' do
           context 'with $boot_start = true (defaults)' do
             if facts[:kernel] == 'Linux' || facts[:kernel] == 'SunOS'
 
-              context 'with $facts[service_provider] == init and $splunk::params::version >= 7.2.2' do
+              context 'with $facts[service_provider] == init and $splunk::enterprise::params::package_ensure >= 7.2.2' do
                 let(:facts) do
                   facts.merge(service_provider: 'init')
                 end
                 let(:pre_condition) do
-                  "class { 'splunk::params': version => '7.2.4.2' }"
+                  "class { 'splunk::enterprise::params': package_ensure => '7.2.4.2-abcdefghijkl' }"
                 end
 
                 it_behaves_like 'splunk enterprise nix defaults'
@@ -95,12 +103,12 @@ describe 'splunk::enterprise' do
                 it { is_expected.to contain_service('splunk').with(ensure: 'running', enable: true, status: nil, restart: nil, start: nil, stop: nil) }
               end
 
-              context 'with $facts[service_provider] == init and $splunk::params::version < 7.2.2' do
+              context 'with $facts[service_provider] == init and $splunk::enterprise::params::package_ensure < 7.2.2' do
                 let(:facts) do
                   facts.merge(service_provider: 'init')
                 end
                 let(:pre_condition) do
-                  "class { 'splunk::params': version => '6.0.0' }"
+                  "class { 'splunk::enterprise::params': package_ensure => '6.0.0-abcdefghijkl' }"
                 end
 
                 it_behaves_like 'splunk enterprise nix defaults'
@@ -114,12 +122,12 @@ describe 'splunk::enterprise' do
                 it { is_expected.to contain_service('splunk').with(ensure: 'running', enable: true, status: nil, restart: nil, start: nil, stop: nil) }
               end
 
-              context 'with $facts[service_provider] == systemd and $splunk::params::version >= 7.2.2' do
+              context 'with $facts[service_provider] == systemd and $splunk::enterpise::params::package_ensure >= 7.2.2' do
                 let(:facts) do
                   facts.merge(service_provider: 'systemd')
                 end
                 let(:pre_condition) do
-                  "class { 'splunk::params': version => '7.2.4.2' }"
+                  "class { 'splunk::enterprise::params': package_ensure => '7.2.4.2-abcdefghijkl' }"
                 end
 
                 it_behaves_like 'splunk enterprise nix defaults'
@@ -133,12 +141,12 @@ describe 'splunk::enterprise' do
                 it { is_expected.to contain_service('Splunkd').with(ensure: 'running', enable: true, status: nil, restart: nil, start: nil, stop: nil) }
               end
 
-              context 'with $facts[service_provider] == systemd and $splunk::params::version < 7.2.2' do
+              context 'with $facts[service_provider] == systemd and $splunk::enterprise::params::package_ensure < 7.2.2' do
                 let(:facts) do
                   facts.merge(service_provider: 'systemd')
                 end
                 let(:pre_condition) do
-                  "class { 'splunk::params': version => '6.0.0' }"
+                  "class { 'splunk::enterprise::params': package_ensure => '6.0.0-abcdefghijkl' }"
                 end
 
                 it_behaves_like 'splunk enterprise nix defaults'
@@ -158,12 +166,12 @@ describe 'splunk::enterprise' do
           context 'with $boot_start = false' do
             if facts[:kernel] == 'Linux' || facts[:kernel] == 'SunOS'
 
-              context 'with $facts[service_provider] == init and $splunk::params::version >= 7.2.2' do
+              context 'with $facts[service_provider] == init and $splunk::enterprise::params::package_ensure >= 7.2.2' do
                 let(:facts) do
                   facts.merge(service_provider: 'init')
                 end
                 let(:pre_condition) do
-                  "class { 'splunk::params': version => '7.2.4.2', boot_start => false }"
+                  "class { 'splunk::enterprise::params': package_ensure => '7.2.4.2-abcdefghijkl', boot_start => false }"
                 end
 
                 it_behaves_like 'splunk enterprise nix defaults'
@@ -177,12 +185,12 @@ describe 'splunk::enterprise' do
                 it { is_expected.to contain_service('splunk').with(restart: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk restart'", start: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk start'", stop: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk stop'", status: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk status'") }
               end
 
-              context 'with $facts[service_provider] == init and $splunk::params::version < 7.2.2' do
+              context 'with $facts[service_provider] == init and $splunk::enterprise::params::package_ensure < 7.2.2' do
                 let(:facts) do
                   facts.merge(service_provider: 'init')
                 end
                 let(:pre_condition) do
-                  "class { 'splunk::params': version => '6.0.0', boot_start => false }"
+                  "class { 'splunk::enterprise::params': package_ensure => '6.0.0-abcdefghijkl', boot_start => false }"
                 end
 
                 it_behaves_like 'splunk enterprise nix defaults'
@@ -196,12 +204,12 @@ describe 'splunk::enterprise' do
                 it { is_expected.to contain_service('splunk').with(restart: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk restart'", start: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk start'", stop: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk stop'", status: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk status'") }
               end
 
-              context 'with $facts[service_provider] == systemd and $splunk::params::version >= 7.2.2' do
+              context 'with $facts[service_provider] == systemd and $splunk::enterprise::params::package_ensure >= 7.2.2' do
                 let(:facts) do
                   facts.merge(service_provider: 'systemd')
                 end
                 let(:pre_condition) do
-                  "class { 'splunk::params': version => '7.2.4.2', boot_start => false }"
+                  "class { 'splunk::enterprise::params': package_ensure => '7.2.4.2-abcdefghijkl', boot_start => false }"
                 end
 
                 it_behaves_like 'splunk enterprise nix defaults'
@@ -215,12 +223,12 @@ describe 'splunk::enterprise' do
                 it { is_expected.to contain_service('Splunkd').with(restart: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk restart'", start: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk start'", stop: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk stop'", status: "/usr/sbin/runuser -l root -c '/opt/splunk/bin/splunk status'") }
               end
 
-              context 'with $facts[service_provider] == systemd and $splunk::params::version < 7.2.2' do
+              context 'with $facts[service_provider] == systemd and $splunk::enterprise::params::package_ensure < 7.2.2' do
                 let(:facts) do
                   facts.merge(service_provider: 'systemd')
                 end
                 let(:pre_condition) do
-                  "class { 'splunk::params': version => '6.0.0', boot_start => false }"
+                  "class { 'splunk::enterprise::params': package_ensure => '6.0.0-abcdefghijkl', boot_start => false }"
                 end
 
                 it_behaves_like 'splunk enterprise nix defaults'

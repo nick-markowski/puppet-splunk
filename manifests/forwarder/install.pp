@@ -4,6 +4,7 @@
 #   for successfully installing the Splunk Universal Forwarder
 #
 class splunk::forwarder::install {
+  assert_private()
 
   $_package_source = $splunk::forwarder::manage_package_source ? {
     true  => $splunk::forwarder::forwarder_package_src,

@@ -4,6 +4,7 @@
 #   Forwarder
 #
 class splunk::forwarder::config {
+  assert_private()
 
   if $splunk::forwarder::seed_password {
     class { 'splunk::forwarder::password::seed':

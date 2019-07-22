@@ -3,6 +3,7 @@
 #   platform specific service management on Linux or Unix type systems.
 #
 class splunk::forwarder::service::nix inherits splunk::forwarder::service {
+  assert_private()
 
   if $splunk::forwarder::boot_start {
     # Ensure splunk services *not* managed by the system service file are

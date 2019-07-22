@@ -4,6 +4,7 @@
 #   sub-classes
 #
 class splunk::forwarder::service {
+  assert_private()
 
   # This is a module that supports multiple platforms. For some platforms
   # there is non-generic configuration that needs to be declared in addition

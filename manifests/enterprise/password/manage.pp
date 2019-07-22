@@ -21,11 +21,11 @@
 # @param secret
 #   The secret used to salt the splunk password.
 #
-# @params service
+# @param service
 #   Name of the Splunk Enterprise service that needs to be restarted after files
 #   are updated, not applicable when running in agent mode.
 #
-# @params mode
+# @param mode
 #   The class is designed to work in two ways, as a helper that is called by
 #   Class[splunk::enterprise::config] or leveraged independently from with in a
 #   Bolt Plan. The value defaults to "bolt" implicitly assuming that anytime it
@@ -33,15 +33,15 @@
 #   Bolt
 #
 class splunk::enterprise::password::manage(
-  Boolean $manage_password                   = $splunk::params::manage_password,
-  Stdlib::Absolutepath $password_config_file = $splunk::params::forwarder_password_config_file,
-  String[1] $password_content                = $splunk::params::password_content,
-  Stdlib::Absolutepath $secret_file          = $splunk::params::forwarder_secret_file,
-  String[1] $secret                          = $splunk::params::secret,
-  String[1] $splunk_user                     = $splunk::params::splunk_user,
-  String[1] $service                         = $splunk::params::enterprise_service,
+  Boolean $manage_password                   = $splunk::enterprise::params::manage_password,
+  Stdlib::Absolutepath $password_config_file = $splunk::enterprise::params::password_config_file,
+  String[1] $password_content                = $splunk::enterprise::params::password_content,
+  Stdlib::Absolutepath $secret_file          = $splunk::enterprise::params::secret_file,
+  String[1] $secret                          = $splunk::enterprise::params::secret,
+  String[1] $splunk_user                     = $splunk::enterprise::params::splunk_user,
+  String[1] $service                         = $splunk::enterprise::params::service,
   Enum['agent', 'bolt'] $mode                = 'bolt',
-) inherits splunk::params {
+) inherits splunk::enterprise::params {
 
   file { $secret_file:
     ensure  => file,
