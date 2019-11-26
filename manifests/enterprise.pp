@@ -307,10 +307,20 @@ class splunk::enterprise (
   -> Class['splunk::enterprise::config']
   ~> Class['splunk::enterprise::service']
 
+  # This is a module that supports multiple platforms. For some platforms
+  # there is non-generic configuration that needs to be declared in addition
+  # to the agnostic resources declared here.
+  if $facts['kernel'] in ['Linux','SunOS'] {
+    contain 'splunk::enterprise::service::nix'
+    Class['splunk::enterprise::config']
+    -> Class['splunk::enterprise::service::nix']
+    -> Class['splunk::enterprise::service']
+  }
+
   # A meta resource so providers know where splunk is installed:
-  splunk_config { 'splunk':
-    server_installdir      => $homedir,
-    server_confdir         => $confdir,
+  splunk_config['splunk'] {
+    server_installdir      => $homedir,                                                                                                                                                                          
+    server_confdir         => $confdir, 
     purge_alert_actions    => $purge_alert_actions,
     purge_authentication   => $purge_authentication,
     purge_authorize        => $purge_authorize,

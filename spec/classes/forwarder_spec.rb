@@ -117,7 +117,7 @@ describe 'splunk::forwarder' do
 
                 it { is_expected.to compile.with_all_deps }
                 it { is_expected.to contain_exec('stop_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk stop') }
-                it { is_expected.to contain_exec('enable_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk enable boot-start -user root --accept-license --answer-yes --no-prompt') }
+                it { is_expected.to contain_exec('enable_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk enable boot-start -user root  --accept-license --answer-yes --no-prompt') }
                 it { is_expected.not_to contain_exec('disable_splunkforwarder') }
                 it { is_expected.not_to contain_exec('license_splunkforwarder') }
                 it { is_expected.to contain_service('splunk').with(ensure: 'running', enable: true, status: nil, restart: nil, start: nil, stop: nil) }
@@ -131,7 +131,7 @@ describe 'splunk::forwarder' do
 
                 it { is_expected.to compile.with_all_deps }
                 it { is_expected.to contain_exec('stop_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk stop') }
-                it { is_expected.to contain_exec('enable_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk enable boot-start -user root --accept-license --answer-yes --no-prompt') }
+                it { is_expected.to contain_exec('enable_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk enable boot-start -user root  --accept-license --answer-yes --no-prompt') }
                 it { is_expected.not_to contain_exec('disable_splunkforwarder') }
                 it { is_expected.not_to contain_exec('license_splunkforwarder') }
                 it { is_expected.to contain_service('splunk').with(ensure: 'running', enable: true, status: nil, restart: nil, start: nil, stop: nil) }
@@ -145,13 +145,26 @@ describe 'splunk::forwarder' do
 
                 it { is_expected.to compile.with_all_deps }
                 it { is_expected.to contain_exec('stop_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk stop') }
-                it { is_expected.to contain_exec('enable_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk enable boot-start -user root --accept-license --answer-yes --no-prompt') }
+                it { is_expected.to contain_exec('enable_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk enable boot-start  -systemd-managed 1 --accept-license --answer-yes --no-prompt') }
                 it { is_expected.not_to contain_exec('disable_splunkforwarder') }
                 it { is_expected.not_to contain_exec('license_splunkforwarder') }
                 it { is_expected.to contain_service('SplunkForwarder').with(ensure: 'running', enable: true, status: nil, restart: nil, start: nil, stop: nil) }
               end
 
-              context 'with $facts[service_provider] == systemd and $splunk::forwarder::release < 7.2.2' do
+              context 'with $facts[service_provider] == systemd and $splunk::params::version >= 7.2.2 and user != root' do
+                let(:facts) do
+                  facts.merge(service_provider: 'systemd')
+                end
+                let(:pre_condition) do
+                  "class { 'splunk::params': version => '7.2.2' }"
+                end
+                let(:params) { { splunk_user: 'splunk' } }
+
+                it { is_expected.to contain_exec('enable_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk enable boot-start -user splunk -systemd-managed 1 --accept-license --answer-yes --no-prompt') }
+              end
+
+              context 'with $facts[service_provider] == systemd and $splunk::params::version < 7.2.2' do
+>>>>>>> remotes/upstream/master
                 let(:facts) do
                   facts.merge(service_provider: 'systemd')
                 end
@@ -159,7 +172,7 @@ describe 'splunk::forwarder' do
 
                 it { is_expected.to compile.with_all_deps }
                 it { is_expected.to contain_exec('stop_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk stop') }
-                it { is_expected.to contain_exec('enable_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk enable boot-start -user root --accept-license --answer-yes --no-prompt') }
+                it { is_expected.to contain_exec('enable_splunkforwarder').with(command: '/opt/splunkforwarder/bin/splunk enable boot-start -user root  --accept-license --answer-yes --no-prompt') }
                 it { is_expected.not_to contain_exec('disable_splunkforwarder') }
                 it { is_expected.not_to contain_exec('license_splunkforwarder') }
                 it { is_expected.to contain_service('splunk').with(ensure: 'running', enable: true, status: nil, restart: nil, start: nil, stop: nil) }
