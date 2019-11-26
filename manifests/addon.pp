@@ -23,7 +23,7 @@
 # @see https://docs.splunk.com/Documentation/AddOns/released/Overview/AboutSplunkadd-ons
 #
 # @param splunk_home
-#   Overrides the default Splunk installation target values from Class[splunk::params]
+#   Overrides the default Splunk installation target values
 #
 # @param package_manage
 #   If a package should be installed as part of declaring a new instance of Splunk::Addon

@@ -17,6 +17,9 @@
 #   Whether or not to enable splunk boot-start, which generates a service file to
 #   manage the Splunk Forwarder service.
 #
+# @param boot_start_args
+#   Arguments to pass splunk during initial start-up
+#
 # @param confdir
 #   Specifies the Splunk Forwarder configuration directory.
 #
@@ -34,8 +37,8 @@
 #
 # @param managed_package_source
 #   Optional. The source URL for the splunk installation media (typically an
-#   RPM, MSI, etc). If a `$src_root` parameter is set in splunk::params, this
-#   will be automatically supplied. Otherwise it is required. The URL can be of
+#   RPM, MSI, etc). If a `$src_root` parameter is set, this will be
+#   automatically supplied. Otherwise it is required. The URL can be of
 #   any protocol supported by the pupept/archive module. On Windows, this can
 #   be a UNC path to the MSI.
 #
@@ -149,6 +152,11 @@
 # @param staging_dir
 #   Root of the archive path to host the Splunk package.
 #
+# @param supports_systemd
+#   Whether or not splunk supports systemd.
+#
+#   Defaults to true for Linux/SunOS and splunk >= 7.2.0, false otherwise
+#
 # @param unmanaged_package_source
 #   Optional. The source URL for the splunk installation media (typically an
 #   RPM, MSI, etc).
@@ -198,11 +206,13 @@ class splunk::forwarder(
   String[1]                      $src_subdir,
   String[1]                      $staging_dir,
   Boolean                        $use_default_config,
+  Optional[String[1]]            $boot_start_args          = undef,
   Optional[String[1]]            $managed_package_source   = undef,
   Optional[String[1]]            $package_ensure           = undef,
   Optional[Splunk::Release]      $release                  = undef,
   Optional[Stdlib::Absolutepath] $service_file             = undef,
   Optional[String[1]]            $service_name             = undef,
+  Optional[Boolean]              $supports_systemd         = undef,
   Optional[String[1]]            $unmanaged_package_source = undef,
 ) {
 
@@ -250,20 +260,29 @@ class splunk::forwarder(
       if $facts['service_provider'] == 'systemd' and versioncmp($_version, '7.2.2') >= 0 {
         $_splunk_service_name = 'SplunkForwarder'
         $_splunk_service_file = '/etc/systemd/system/multi-user.target.wants/SplunkForwarder.service'
+        $_splunk_supports_systemd = true
+        $_splunk_boot_start_args = '-systemd-managed 1'
       }
       else {
         $_splunk_service_name = 'splunk'
         $_splunk_service_file = '/etc/init.d/splunk'
+        $_splunk_supports_systemd = false
+        $_splunk_boot_start_args = ''
       }
     }
     'windows': {
       $_splunk_service_name = 'splunkd'
       $_splunk_service_file = "${homedir}\\dummy"
+      $_splunk_supports_systemd = false
+      $_splunk_boot_start_args = ''
     }
     default  : { fail("splunk module does not support kernel ${facts['kernel']}") }
   }
   $_service_name = pick($service_name, $_splunk_service_name)
   $_service_file = pick($service_file, $_splunk_service_file)
+  $_supports_systemd = pick($supports_systemd, $_splunk_supports_systemd)
+  # pick() won't select between undef and empty string, so use a ternary
+  $_boot_start_args = $boot_start_args != undef ? { true => $boot_start_args, default => $_splunk_boot_start_args}
 
 
   contain 'splunk::forwarder::install'
@@ -284,9 +303,9 @@ class splunk::forwarder(
     -> Class['splunk::forwarder::service']
   }
 
-  splunk_config['splunk'] {
-    forwarder_installdir             => $homedir,                                                                                                                                                                
-    forwarder_confdir                => $confdir, 
+  splunk_config { 'splunk':
+    forwarder_installdir             => $homedir,
+    forwarder_confdir                => $confdir,
     purge_forwarder_deploymentclient => $purge_deploymentclient,
     purge_forwarder_outputs          => $purge_outputs,
     purge_forwarder_inputs           => $purge_inputs,

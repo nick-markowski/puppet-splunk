@@ -18,7 +18,7 @@ class splunk::forwarder::service::nix inherits splunk::forwarder::service {
       timeout => 0,
       notify  => Exec['enable_splunkforwarder'],
     }
-    if $splunk::params::supports_systemd and $splunk::forwarder::splunk_user == 'root' {
+    if $splunk::forwarder::_supports_systemd and $splunk::forwarder::splunk_user == 'root' {
       $user_args = ''
     } else {
       $user_args = "-user ${splunk::forwarder::splunk_user}"
@@ -27,7 +27,7 @@ class splunk::forwarder::service::nix inherits splunk::forwarder::service {
     # unit files during uninstallation, so you may be required to manually
     # remove existing unit files before re-installing and enabling boot-start.
     exec { 'enable_splunkforwarder':
-      command     => "${splunk::forwarder::homedir}/bin/splunk enable boot-start ${user_args} ${splunk::params::boot_start_args} --accept-license --answer-yes --no-prompt",
+      command     => "${splunk::forwarder::homedir}/bin/splunk enable boot-start ${user_args} ${splunk::forwarder::_boot_start_args} --accept-license --answer-yes --no-prompt",
       tag         => 'splunk_forwarder',
       refreshonly => true,
       before      => Service[$splunk::forwarder::_service_name],

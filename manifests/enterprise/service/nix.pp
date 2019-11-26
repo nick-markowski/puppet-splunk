@@ -18,7 +18,7 @@ class splunk::enterprise::service::nix inherits splunk::enterprise::service {
       timeout => 0,
       notify  => Exec['enable_splunk'],
     }
-    if $splunk::params::supports_systemd and $splunk::enterprise::splunk_user == 'root' {
+    if $splunk::enterprise::_supports_systemd and $splunk::enterprise::splunk_user == 'root' {
       $user_args = ''
     } else {
       $user_args = "-user ${splunk::enterprise::splunk_user}"
@@ -27,7 +27,7 @@ class splunk::enterprise::service::nix inherits splunk::enterprise::service {
     # unit files during uninstallation, so you may be required to manually
     # remove existing unit files before re-installing and enabling boot-start.
     exec { 'enable_splunk':
-      command     => "${splunk::enterprise::homedir}/bin/splunk enable boot-start ${user_args} ${splunk::params::boot_start_args} --accept-license --answer-yes --no-prompt",
+      command     => "${splunk::enterprise::homedir}/bin/splunk enable boot-start ${user_args} ${splunk::enterprise::_boot_start_args} --accept-license --answer-yes --no-prompt",
       refreshonly => true,
       before      => Service[$splunk::enterprise::_service_name],
       require     => Exec['stop_splunk'],

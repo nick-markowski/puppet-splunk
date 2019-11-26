@@ -168,19 +168,16 @@ describe 'splunk::enterprise' do
                 it { is_expected.to contain_service('Splunkd').with(ensure: 'running', enable: true, status: nil, restart: nil, start: nil, stop: nil) }
               end
 
-              context 'with $facts[service_provider] == systemd and $splunk::params::version >= 7.2.2 and user != root' do
+              context 'with $facts[service_provider] == systemd and $splunk::release >= 7.2.4.2-fb30470262e3 and user != root' do
                 let(:facts) do
                   facts.merge(service_provider: 'systemd')
                 end
-                let(:pre_condition) do
-                  "class { 'splunk::params': version => '7.2.4.2' }"
-                end
-                let(:params) { { splunk_user: 'splunk' } }
+                let(:params) { { 'splunk_user' => 'splunk', 'release' => '7.2.4.2-fb30470262e3' } }
 
                 it { is_expected.to contain_exec('enable_splunk').with(command: '/opt/splunk/bin/splunk enable boot-start -user splunk -systemd-managed 1 --accept-license --answer-yes --no-prompt') }
               end
 
-              context 'with $facts[service_provider] == systemd and $splunk::params::version < 7.2.2' do
+              context 'with $facts[service_provider] == systemd and $splunk::enterprise::release < 7.2.2' do
                 let(:facts) do
                   facts.merge(service_provider: 'systemd')
                 end
